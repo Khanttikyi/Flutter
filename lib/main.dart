@@ -1,5 +1,7 @@
 import 'dart:math';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import './initiazlied-page.dart';
 import 'dart:developer';
@@ -40,42 +42,71 @@ class MyApp extends StatelessWidget {
   }
 }
 
+Future<List<ByteData>> _loadAssets() async {
+  List<Future<ByteData>> futures = [
+    rootBundle.load('assets/images/profile.png'),
+    rootBundle.load('assets/images/avatar.png'),
+    rootBundle.load('assets/images/login_bg_hd.png'),
+  ];
+
+  // Wait for both asset Futures to complete
+  List<ByteData> results = await Future.wait(futures);
+
+  // Return the results as a list
+  return results;
+}
+
 class CustomCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return new Card(
-      child: new Column(
-        children: <Widget>[
-          new Image.asset('/images/profile.png'),
-          new Padding(
-              padding: new EdgeInsets.all(7.0),
-              child: new Row(
+    return FutureBuilder<List<ByteData>>(
+        future: _loadAssets(),
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            ByteData firstImageData = snapshot.data![0];
+            ByteData secondImageData = snapshot.data![1];
+            ByteData thirdImageData = snapshot.data![2];
+            return new Card(
+              child: new Column(
                 children: <Widget>[
+                  new Image.memory(secondImageData.buffer.asUint8List()),
                   new Padding(
-                    padding: new EdgeInsets.all(7.0),
-                    child: new Icon(Icons.thumb_up),
-                  ),
-                  new Padding(
-                    padding: new EdgeInsets.all(7.0),
-                    child: new Text(
-                      'Like',
-                      style: new TextStyle(fontSize: 18.0),
-                    ),
-                  ),
-                  new Padding(
-                    padding: new EdgeInsets.all(7.0),
-                    child: new Icon(Icons.comment),
-                  ),
-                  new Padding(
-                    padding: new EdgeInsets.all(7.0),
-                    child: new Text('Comments',
-                        style: new TextStyle(fontSize: 18.0)),
-                  )
+                      padding: new EdgeInsets.all(7.0),
+                      child: new Row(
+                        children: <Widget>[
+                          new Padding(
+                            padding: new EdgeInsets.all(7.0),
+                            child: new Icon(Icons.thumb_up),
+                          ),
+                          new Padding(
+                            padding: new EdgeInsets.all(7.0),
+                            child: new Text(
+                              'Like',
+                              style: new TextStyle(fontSize: 18.0),
+                            ),
+                          ),
+                          new Padding(
+                            padding: new EdgeInsets.all(7.0),
+                            child: new Icon(Icons.comment),
+                          ),
+                          new Padding(
+                            padding: new EdgeInsets.all(7.0),
+                            child: new Text('Comments',
+                                style: new TextStyle(fontSize: 18.0)),
+                          )
+                        ],
+                      ))
                 ],
-              ))
-        ],
-      ),
-    );
+              ),
+            );
+          } else if (snapshot.hasError) {
+            // An error occurred while retrieving the data
+            return Text('Error retrieving data: ${snapshot.error}');
+          } else {
+            // Data is still being retrieved
+            return CircularProgressIndicator();
+          }
+        });
   }
 }
 
@@ -143,8 +174,8 @@ class _MyHomePageState extends State<MyHomePage> {
     _refreshItems();
   }
 
-  Widget card(
-      String name, String phone, String email, index, BuildContext context) {
+  Widget card(String name, String phone, String email, index,
+      BuildContext context, img) {
     return Card(
       color: Colors.white,
       elevation: 23,
@@ -160,8 +191,8 @@ class _MyHomePageState extends State<MyHomePage> {
               mainAxisAlignment: MainAxisAlignment.start,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Image.asset(
-                  '/images/avatar.png',
+                Image.memory(
+                  img.buffer.asUint8List(),
                   width: 220,
                   height: 220,
                 ),
@@ -255,141 +286,158 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        FocusManager.instance.primaryFocus?.unfocus();
-      },
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text(widget.title,
-              style:
-                  const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-          centerTitle: true,
-        ),
-
-        body: Container(
-          margin: EdgeInsets.all(23),
-          decoration: BoxDecoration(
-            image: DecorationImage(
-              image: AssetImage('/images/login_bg_hd.png'),
-              opacity: 0.5,
-              fit: BoxFit.cover,
-            ),
-          ),
-          child: _recordList.isEmpty
-              ? const Center(child: Text('No User Data'))
-              : ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: _recordList.length,
-                  itemBuilder: (BuildContext context, int index) {
-                    return card(
-                        _recordList[index]['name'],
-                        _recordList[index]['phone'],
-                        _recordList[index]['email'],
-                        index,
-                        context);
-                  },
+    return FutureBuilder<List<ByteData>>(
+        future: _loadAssets(),
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            ByteData firstImageData = snapshot.data![0];
+            ByteData secondImageData = snapshot.data![1];
+            ByteData thirdImageData = snapshot.data![2];
+            return GestureDetector(
+              onTap: () {
+                FocusManager.instance.primaryFocus?.unfocus();
+              },
+              child: Scaffold(
+                appBar: AppBar(
+                  title: Text(widget.title,
+                      style: const TextStyle(
+                          fontSize: 18, fontWeight: FontWeight.bold)),
+                  centerTitle: true,
                 ),
-        ),
 
-        // body: Container(
-        //   child: _recordList.isEmpty
-        //       ? const Center(child: Text('No User Data'))
-        //       : ListView.separated(
-        //           // scrollDirection: Axis.horizontal,
-        //           separatorBuilder: (context, index) => const SizedBox(
-        //                 height: 25,
-        //               ),
-        //           padding: const EdgeInsets.all(15),
-        //           itemCount: _recordList.length,
-        //           itemBuilder: (context, index) {
-        //             return ListTile(
-        //               // dense: true,
-        //               tileColor: Colors.blue.withOpacity(0.2),
-        //               contentPadding: const EdgeInsets.symmetric(
-        //                   vertical: 15, horizontal: 10),
-        //               shape: RoundedRectangleBorder(
-        //                 side: BorderSide(
-        //                     width: 1, color: Colors.black.withOpacity(0.7)),
-        //                 borderRadius: BorderRadius.circular(12),
-        //               ),
-        //               leading: CircleAvatar(
-        //                 backgroundImage: AssetImage(
-        //                     '/images/Avatar-Profile.png'), //NetworkImage
-        //                 radius: 100,
-        //                 backgroundColor: Colors.white,
-        //               ), //CircleAvatar
+                body: Container(
+                  margin: EdgeInsets.all(23),
+                  decoration: BoxDecoration(
+                    image: DecorationImage(
+                      image: MemoryImage(thirdImageData.buffer.asUint8List()),
+                      opacity: 0.5,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                  child: _recordList.isEmpty
+                      ? const Center(child: Text('No User Data'))
+                      : ListView.builder(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: _recordList.length,
+                          itemBuilder: (BuildContext context, int index) {
+                            return card(
+                              _recordList[index]['name'],
+                              _recordList[index]['phone'],
+                              _recordList[index]['email'],
+                              index,
+                              context,
+                              secondImageData
+                            );
+                          },
+                        ),
+                ),
 
-        //               title: Row(
-        //                 mainAxisAlignment: MainAxisAlignment.spaceAround,
-        //                 crossAxisAlignment: CrossAxisAlignment.start,
-        //                 children: [
-        //                   Column(
-        //                     children: [
-        //                       Text(
-        //                         "Name   :  " + _recordList[index]["name"],
-        //                         style: const TextStyle(
-        //                           fontWeight: FontWeight.bold,
-        //                         ),
-        //                       ),
-        //                     ],
-        //                   ),
-        //                   Column(
-        //                     children: [
-        //                       Text(
-        //                         "Phone   :  " + _recordList[index]["phone"],
-        //                         style: const TextStyle(
-        //                             fontWeight: FontWeight.w400),
-        //                       ),
-        //                     ],
-        //                   ),
-        //                   Column(
-        //                     children: [
-        //                       Text(
-        //                         "Email   :  " + _recordList[index]["email"],
-        //                         style: const TextStyle(
-        //                             fontWeight: FontWeight.w400),
-        //                       ),
-        //                     ],
-        //                   ),
-        //                 ],
-        //               ),
-        //               trailing: Row(
-        //                 mainAxisSize: MainAxisSize.min,
-        //                 children: [
-        //                   IconButton(
-        //                       onPressed: () {
-        //                         _showUserForm(
-        //                             context, _recordList[index]['key']);
-        //                       },
-        //                       icon: const Icon(
-        //                         Icons.edit,
-        //                         color: Colors.lightBlue,
-        //                         size: 16,
-        //                       )),
-        //                   IconButton(
-        //                       onPressed: () {
-        //                         _deleteEntry(_recordList[index]['key']);
-        //                       },
-        //                       icon: const Icon(
-        //                         Icons.delete,
-        //                         color: Colors.red,
-        //                         size: 16,
-        //                       )),
-        //                 ],
-        //               ),
-        //             );
-        //           }),
-        // ),
-        floatingActionButton: FloatingActionButton(
-          onPressed: () {
-            _showUserForm(context, null);
-          },
-          tooltip: 'add',
-          child: const Icon(Icons.add),
-        ),
-      ),
-    );
+                // body: Container(
+                //   child: _recordList.isEmpty
+                //       ? const Center(child: Text('No User Data'))
+                //       : ListView.separated(
+                //           // scrollDirection: Axis.horizontal,
+                //           separatorBuilder: (context, index) => const SizedBox(
+                //                 height: 25,
+                //               ),
+                //           padding: const EdgeInsets.all(15),
+                //           itemCount: _recordList.length,
+                //           itemBuilder: (context, index) {
+                //             return ListTile(
+                //               // dense: true,
+                //               tileColor: Colors.blue.withOpacity(0.2),
+                //               contentPadding: const EdgeInsets.symmetric(
+                //                   vertical: 15, horizontal: 10),
+                //               shape: RoundedRectangleBorder(
+                //                 side: BorderSide(
+                //                     width: 1, color: Colors.black.withOpacity(0.7)),
+                //                 borderRadius: BorderRadius.circular(12),
+                //               ),
+                //               leading: CircleAvatar(
+                //                 backgroundImage: AssetImage(
+                //                     '/images/Avatar-Profile.png'), //NetworkImage
+                //                 radius: 100,
+                //                 backgroundColor: Colors.white,
+                //               ), //CircleAvatar
+
+                //               title: Row(
+                //                 mainAxisAlignment: MainAxisAlignment.spaceAround,
+                //                 crossAxisAlignment: CrossAxisAlignment.start,
+                //                 children: [
+                //                   Column(
+                //                     children: [
+                //                       Text(
+                //                         "Name   :  " + _recordList[index]["name"],
+                //                         style: const TextStyle(
+                //                           fontWeight: FontWeight.bold,
+                //                         ),
+                //                       ),
+                //                     ],
+                //                   ),
+                //                   Column(
+                //                     children: [
+                //                       Text(
+                //                         "Phone   :  " + _recordList[index]["phone"],
+                //                         style: const TextStyle(
+                //                             fontWeight: FontWeight.w400),
+                //                       ),
+                //                     ],
+                //                   ),
+                //                   Column(
+                //                     children: [
+                //                       Text(
+                //                         "Email   :  " + _recordList[index]["email"],
+                //                         style: const TextStyle(
+                //                             fontWeight: FontWeight.w400),
+                //                       ),
+                //                     ],
+                //                   ),
+                //                 ],
+                //               ),
+                //               trailing: Row(
+                //                 mainAxisSize: MainAxisSize.min,
+                //                 children: [
+                //                   IconButton(
+                //                       onPressed: () {
+                //                         _showUserForm(
+                //                             context, _recordList[index]['key']);
+                //                       },
+                //                       icon: const Icon(
+                //                         Icons.edit,
+                //                         color: Colors.lightBlue,
+                //                         size: 16,
+                //                       )),
+                //                   IconButton(
+                //                       onPressed: () {
+                //                         _deleteEntry(_recordList[index]['key']);
+                //                       },
+                //                       icon: const Icon(
+                //                         Icons.delete,
+                //                         color: Colors.red,
+                //                         size: 16,
+                //                       )),
+                //                 ],
+                //               ),
+                //             );
+                //           }),
+                // ),
+                floatingActionButton: FloatingActionButton(
+                  onPressed: () {
+                    _showUserForm(context, null);
+                  },
+                  tooltip: 'add',
+                  child: const Icon(Icons.add),
+                ),
+              ),
+            );
+          } else if (snapshot.hasError) {
+            // An error occurred while retrieving the data
+            return Text('Error retrieving data: ${snapshot.error}');
+          } else {
+            // Data is still being retrieved
+            return CircularProgressIndicator();
+          }
+        });
   }
 
   submitData(itemkey) {

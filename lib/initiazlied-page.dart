@@ -1,4 +1,7 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_crud_with_hive_local_database/login.dart';
 import 'package:flutter_crud_with_hive_local_database/main.dart';
 
@@ -27,59 +30,79 @@ class InitializedPage extends StatefulWidget {
 }
 
 class _InitializedPageState extends State<InitializedPage> {
+  late Future<ByteData> _imageByteData;
   @override
   void initState() {
+    _imageByteData = rootBundle.load('assets/images/login_bg_hd.png');
     // TODO: implement initState
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.title,
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-        centerTitle: true,
-      ),
-      body: Container(
-        decoration: BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage('/images/login_bg_hd.png'),
-            opacity: 0.5,
-            fit: BoxFit.cover,
-          ),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => LoginPage(title:'Login')),
-                    );
-                  },
-                  child: Text('GET START',style: TextStyle(fontSize: 15,fontWeight: FontWeight.bold),),
-                  style: ElevatedButton.styleFrom(
-                    primary: Colors.blueAccent,
-                    onPrimary: Colors.white,
-                    elevation: 15,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    minimumSize: Size(300, 55),
-                  ),
-                )
-              ],
-            )
-          ],
-        ),
-      ),
+    return FutureBuilder(
+      future: _imageByteData,
+      builder: (BuildContext context, AsyncSnapshot<ByteData> snapshot) {
+        if (snapshot.hasData) {
+          return Scaffold(
+            appBar: AppBar(
+              title: Text(widget.title,
+                  style: const TextStyle(
+                      fontSize: 18, fontWeight: FontWeight.bold)),
+              centerTitle: true,
+            ),
+            body: Container(
+              decoration: BoxDecoration(
+                image: DecorationImage(
+                  image: MemoryImage(snapshot.data!.buffer.asUint8List()),
+                  fit: BoxFit.cover,
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      ElevatedButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) =>
+                                    LoginPage(title: 'Login')),
+                          );
+                        },
+                        child: Text(
+                          'GET START',
+                          style: TextStyle(
+                              fontSize: 15, fontWeight: FontWeight.bold),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          primary: Colors.blueAccent,
+                          onPrimary: Colors.white,
+                          elevation: 15,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          minimumSize: Size(300, 55),
+                        ),
+                      )
+                    ],
+                  )
+                ],
+              ),
+            ),
+          );
+        } else if (snapshot.hasError) {
+          // An error occurred while retrieving the data
+          return Text('Error retrieving data: ${snapshot.error}');
+        } else {
+          // Data is still being retrieved
+          return CircularProgressIndicator();
+        }
+      },
     );
   }
 }
