@@ -8,7 +8,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Hive.initFlutter();
   await Hive.openBox('user_database');
-  runApp(MyApp());
+  runApp(Nav2App());
 }
 
 class Nav2App extends StatelessWidget {
