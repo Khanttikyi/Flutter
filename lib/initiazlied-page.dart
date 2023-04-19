@@ -71,7 +71,7 @@ class _InitializedPageState extends State<InitializedPage> {
                             context,
                             MaterialPageRoute(
                                 builder: (context) =>
-                                    LoginPage(title: 'Login')),
+                                    LoginPage(title:'Login')),
                           );
                         },
                         child: Text(
