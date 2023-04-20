@@ -187,8 +187,8 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   loginUser() {
-    if (_usernameController.value.text == 'admin' &&
-        _passwordController.value.text == 'bs123456') {
+    // if (_usernameController.value.text == 'admin' &&
+    //     _passwordController.value.text == 'bs123456') {
       Navigator.push(
           context,
           MaterialPageRoute(
@@ -196,10 +196,10 @@ class _LoginPageState extends State<LoginPage> {
       setState(() {
         isValid = true;
       });
-    } else {
-      setState(() {
-        isValid = false;
-      });
-    }
+    // } else {
+    //   setState(() {
+    //     isValid = false;
+    //   });
+    // }
   }
 }

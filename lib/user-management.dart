@@ -61,12 +61,17 @@ class UserManagementPage extends StatefulWidget {
 
 class _UserManagementPageState extends State<UserManagementPage> {
   bool submit = false;
+
   final TextEditingController _nameController = new TextEditingController();
   final TextEditingController _phoneController = new TextEditingController();
   final TextEditingController _emailController = new TextEditingController();
   var newRecord = Map<String, dynamic>;
   List<Map<String, dynamic>> _recordList = [];
-
+  double _screenWidth = 0;
+  int _crossAxisCount = 1;
+  double _childAspectRatio = 1;
+  double _fontSize = 10;
+  MediaQueryData _mediaQueryData = MediaQueryData();
   final _userDatabase = Hive.box('user_database');
 
   Future<void> _saveEntry(newRecord) async {
@@ -104,9 +109,17 @@ class _UserManagementPageState extends State<UserManagementPage> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _mediaQueryData = MediaQuery.of(context);
+  }
+
+  @override
   void initState() {
     // TODO: implement initState
     super.initState();
+    WidgetsBinding.instance!
+        .addPostFrameCallback((_) => _onAfterBuild(context));
     _nameController.addListener(() {
       setState(() {
         submit = _nameController.text.isNotEmpty;
@@ -115,113 +128,43 @@ class _UserManagementPageState extends State<UserManagementPage> {
     _refreshItems();
   }
 
-  Widget card(String name, String phone, String email, index,
-      BuildContext context, img) {
-    return Card(
-      color: Colors.white,
-      elevation: 20,
-      borderOnForeground: true,
-      shadowColor: Colors.lightBlue,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-      child: Container(
-        // margin: EdgeInsets.all(15),
-        child: Padding(
-            padding: EdgeInsets.all(10),
-            child: Column(
-              children: [
-                Image.memory(
-                  img.buffer.asUint8List(),
-                  width: 50,
-                  height: 50,
-                ),
-                SizedBox(
-                  height: 10,
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      name,
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    )
-                  ],
-                ),
-                SizedBox(
-                  height: 15,
-                ),
-                Row(
-                  children: [
-                    Text(
-                      phone,
-                      style: TextStyle(),
-                    )
-                  ],
-                ),
-                SizedBox(
-                  height: 15,
-                ),
-                Row(
-                  children: [
-                    Text(
-                      email,
-                      style: TextStyle(),
-                    )
-                  ],
-                ),
-                SizedBox(
-                  height: 20,
-                ),
-                Container(
-                  decoration: BoxDecoration(
-                    border: Border(
-                      top: BorderSide(
-                        color: Colors.grey,
-                        width: 1.0,
-                      ),
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Column(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          IconButton(
-                            icon: Icon(
-                              Icons.edit,
-                              color: Colors.amber,
-                            ),
-                            onPressed: () {
-                              _showUserForm(context, _recordList[index]['key']);
-                            },
-                          ),
-                        ],
-                      ),
-                      SizedBox(width: 10),
-                      Column(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          IconButton(
-                            icon: Icon(
-                              Icons.delete,
-                              color: Colors.red,
-                            ),
-                            onPressed: () {
-                              _deleteEntry(_recordList[index]['key']);
-                            },
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            )),
-      ),
-    );
+  void _onAfterBuild(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    setState(() {
+      _screenWidth = screenWidth;
+      _crossAxisCount = _calculateCrossAxisCount(screenWidth);
+      _childAspectRatio =
+          _calculateChildAspectRatio(screenWidth, _crossAxisCount);
+      _fontSize = _calculateFontSize(screenWidth);
+    });
+  }
+
+  double _calculateFontSize(double screenWidth) {
+    if (screenWidth >= 1200) {
+      return 18;
+    } else if (screenWidth >= 800) {
+      return 10;
+    } else if (screenWidth >= 370) {
+      return 10;
+    } else {
+      return 10;
+    }
+  }
+
+  int _calculateCrossAxisCount(double screenWidth) {
+    if (screenWidth >= 1200) {
+      return 4;
+    } else if (screenWidth >= 800) {
+      return 3;
+    } else if (screenWidth >= 370) {
+      return 2;
+    } else {
+      return 1;
+    }
+  }
+
+  double _calculateChildAspectRatio(double screenWidth, int crossAxisCount) {
+    return screenWidth / crossAxisCount / 150;
   }
 
   @override
@@ -297,7 +240,7 @@ class _UserManagementPageState extends State<UserManagementPage> {
                   child: _recordList.isEmpty
                       ? const Center(child: Text('No User Data'))
                       // : ListView.builder(
-                      //     scrollDirection: Axis.horizontal,
+                      //     =scrollDirection: Axis.horizontal,
                       //     itemCount: _recordList.length,
                       //     itemBuilder: (BuildContext context, int index) {
                       //       return card(
@@ -315,8 +258,8 @@ class _UserManagementPageState extends State<UserManagementPage> {
                           itemCount: _recordList.length,
                           gridDelegate:
                               SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            childAspectRatio: 0.79,
+                            crossAxisCount: _crossAxisCount,
+                            childAspectRatio: _childAspectRatio,
                           ),
                           itemBuilder: (BuildContext context, int index) {
                             return card(
@@ -345,6 +288,186 @@ class _UserManagementPageState extends State<UserManagementPage> {
             return CircularProgressIndicator();
           }
         });
+  }
+
+  Widget card(String name, String phone, String email, index,
+      BuildContext context, img) {
+    return Card(
+       color: Colors.white,
+      elevation: 20,
+      borderOnForeground: true,
+      shadowColor: Colors.white,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15),side: BorderSide(color:Colors.blueGrey,width: 1)),
+      child: Container(
+        // margin: EdgeInsets.all(15),
+        
+        child: Padding(
+            padding: EdgeInsets.all(3),
+            child: Column(
+              children: [
+                Container(
+                  decoration: BoxDecoration(
+                    border: Border(
+                      bottom: BorderSide(
+                        color: Colors.lightBlue,
+                        width: 3.0,
+                      ),
+                    ),
+                  ),
+                  child: Padding(
+                    padding: EdgeInsets.all(8),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Text(
+                          name,
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        )
+                      ],
+                    ),
+                  ),
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Image.memory(
+                          img.buffer.asUint8List(),
+                          width: 45,
+                          height: 45,
+                        ),
+                      ],
+                    ),
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              email,
+                              style: TextStyle(),
+                            )
+                          ],
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              phone,
+                              style: TextStyle(),
+                            )
+                          ],
+                        )
+                      ],
+                    ),
+                  ],
+                ),
+                _screenWidth >= 1200
+                    ? Divider()
+                    : SizedBox(
+                        height: 5,
+                      ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Expanded(
+                      child: Padding(
+                          padding: const EdgeInsets.fromLTRB(5, 0, 5, 0),
+                          child: Opacity(
+                            opacity: 0.8,
+                            child: ElevatedButton.icon(
+                              style: ElevatedButton.styleFrom(
+                                primary: Colors.lightBlue, // background color
+                                onPrimary: Colors.white, // text color
+                                textStyle: TextStyle(fontSize: _fontSize),
+                              ),
+                              onPressed: () {
+                                _showUserForm(
+                                    context, _recordList[index]['key']);
+                              },
+                              icon: Icon(
+                                Icons.edit,
+                                size: _fontSize,
+                              ),
+                              label: Text('Edit'),
+                            ),
+                          )),
+                    ),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(5, 0, 5, 0),
+                        child: Opacity(
+                          opacity: 0.8,
+                          child: ElevatedButton.icon(
+                            style: ElevatedButton.styleFrom(
+                                primary: Colors.red, // background color
+                                onPrimary: Colors.white, // text color
+                                textStyle: TextStyle(fontSize: _fontSize)),
+                            onPressed: () {
+                              _deleteEntry(_recordList[index]['key']);
+                            },
+                            icon: Icon(
+                              Icons.delete,
+                              size: _fontSize,
+                            ),
+                            label: Text('Delete'),
+                          ),
+                        ),
+                      ),
+                    )
+                    // Container(
+                    //   child: Column(children: [
+                    //     ElevatedButton.icon(
+                    //       style: ElevatedButton.styleFrom(
+                    //         primary: Colors.lightBlue, // background color
+                    //         onPrimary: Colors.white, // text color
+                    //         textStyle: TextStyle(fontSize: _fontSize),
+                    //       ),
+                    //       onPressed: () {
+                    //         _showUserForm(context, _recordList[index]['key']);
+                    //       },
+                    //       icon: Icon(
+                    //         Icons.edit,
+                    //         size: _fontSize,
+                    //       ),
+                    //       label: Text('Edit'),
+                    //     ),
+                    //   ]),
+                    // ),
+                    // Container(
+                    //   child: Column(children: [
+                    //     ElevatedButton.icon(
+                    //       style: ElevatedButton.styleFrom(
+                    //           primary: Colors.red, // background color
+                    //           onPrimary: Colors.white, // text color
+                    //           textStyle: TextStyle(fontSize: _fontSize)),
+                    //       onPressed: () {
+                    //         _deleteEntry(_recordList[index]['key']);
+                    //       },
+                    //       icon: Icon(
+                    //         Icons.delete,
+                    //         size: _fontSize,
+                    //       ),
+                    //       label: Text('Delete'),
+                    //     ),
+                    //   ]),
+                    // ),
+                  ],
+                ),
+              ],
+            )),
+      ),
+    );
   }
 
   submitData(itemkey) {
@@ -395,77 +518,97 @@ class _UserManagementPageState extends State<UserManagementPage> {
             type: MaterialType.transparency,
             child: Center(
               child: Container(
-          width: MediaQuery.of(context).size.width,
-          height: MediaQuery.of(context).size.height,
-              child: AlertDialog(
-                // <-- SEE HERE
-                title: Text(
-                  itemkey == null ? 'Create New User' : 'User Detail Info',
-                  style: const TextStyle(
-                      color: Colors.black, fontWeight: FontWeight.bold),
-                ),
+                width: MediaQuery.of(context).size.width,
+                height: MediaQuery.of(context).size.height,
+                child: AlertDialog(
+                  // <-- SEE HERE
+                  title: Text(
+                    itemkey == null ? 'Create New User' : 'User Detail Info',
+                    style: const TextStyle(
+                        color: Colors.black, fontWeight: FontWeight.bold),
+                  ),
 
-                content: SingleChildScrollView(
-                  child: Container(
-                    width: MediaQuery.of(context).size.width,
-                    padding: EdgeInsets.all(8),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.max,
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        TextField(
-                          controller: _nameController,
-                          decoration: const InputDecoration(
-                            labelText: 'User Name',
-                            // hintText: 'User Name',
-                            focusedBorder: UnderlineInputBorder(
-                                borderSide: BorderSide(
-                                    width: 3, color: Colors.greenAccent)),
+                  content: SingleChildScrollView(
+                    child: Container(
+                      width: MediaQuery.of(context).size.width,
+                      padding: EdgeInsets.all(8),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.max,
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          TextField(
+                            controller: _nameController,
+                            decoration: const InputDecoration(
+                              labelText: 'User Name',
+                              // hintText: 'User Name',
+                              focusedBorder: UnderlineInputBorder(
+                                  borderSide: BorderSide(
+                                      width: 3, color: Colors.greenAccent)),
+                            ),
                           ),
-                        ),
-                        const SizedBox(
-                          height: 5,
-                        ),
-                        TextField(
-                          controller: _phoneController,
-                          decoration: const InputDecoration(
-                            // hintText: 'Phone',
-                            labelText: 'Phone',
-                            focusedBorder: UnderlineInputBorder(
-                                borderSide: BorderSide(
-                                    width: 3, color: Colors.greenAccent)),
+                          const SizedBox(
+                            height: 5,
                           ),
-                        ),
-                        const SizedBox(
-                          height: 5,
-                        ),
-                        TextField(
-                          controller: _emailController,
-                          decoration: const InputDecoration(
-                            labelText: 'Email',
-                            // hintText: 'Email',
-                            focusedBorder: UnderlineInputBorder(
-                                borderSide: BorderSide(
-                                    width: 3, color: Colors.greenAccent)),
+                          TextField(
+                            controller: _phoneController,
+                            decoration: const InputDecoration(
+                              // hintText: 'Phone',
+                              labelText: 'Phone',
+                              focusedBorder: UnderlineInputBorder(
+                                  borderSide: BorderSide(
+                                      width: 3, color: Colors.greenAccent)),
+                            ),
                           ),
-                        ),
-                        const SizedBox(
-                          height: 20,
-                        ),
-                        Row(children: [
-                          Spacer(),
-                          Column(
-                            children: [
+                          const SizedBox(
+                            height: 5,
+                          ),
+                          TextField(
+                            controller: _emailController,
+                            decoration: const InputDecoration(
+                              labelText: 'Email',
+                              // hintText: 'Email',
+                              focusedBorder: UnderlineInputBorder(
+                                  borderSide: BorderSide(
+                                      width: 3, color: Colors.greenAccent)),
+                            ),
+                          ),
+                          const SizedBox(
+                            height: 20,
+                          ),
+                          Row(children: [
+                            Spacer(),
+                            Column(
+                              children: [
+                                ElevatedButton(
+                                  onPressed: () {
+                                    _nameController.clear();
+                                    _phoneController.clear();
+                                    _emailController.clear();
+                                    Navigator.of(context).pop();
+                                  },
+                                  child: Text('Cancel'),
+                                  style: ElevatedButton.styleFrom(
+                                    primary: Colors.grey,
+                                    onPrimary: Colors.white,
+                                    elevation: 15,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    // minimumSize: Size(130, 45),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            SizedBox(
+                              width: 25,
+                            ),
+                            Column(children: [
                               ElevatedButton(
-                                onPressed: () {
-                                  _nameController.clear();
-                                  _phoneController.clear();
-                                  _emailController.clear();
-                                  Navigator.of(context).pop();
-                                },
-                                child: Text('Cancel'),
+                                onPressed: () => submitData(itemkey),
+                                child:
+                                    Text(itemkey == null ? 'Create' : 'Update'),
                                 style: ElevatedButton.styleFrom(
-                                  primary: Colors.grey,
+                                  primary: Colors.blueAccent,
                                   onPrimary: Colors.white,
                                   elevation: 15,
                                   shape: RoundedRectangleBorder(
@@ -474,34 +617,14 @@ class _UserManagementPageState extends State<UserManagementPage> {
                                   // minimumSize: Size(130, 45),
                                 ),
                               ),
-                            ],
-                          ),
-                          SizedBox(
-                            width: 25,
-                          ),
-                          Column(children: [
-                            ElevatedButton(
-                              onPressed: () => submitData(itemkey),
-                              child:
-                                  Text(itemkey == null ? 'Create' : 'Update'),
-                              style: ElevatedButton.styleFrom(
-                                primary: Colors.blueAccent,
-                                onPrimary: Colors.white,
-                                elevation: 15,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                // minimumSize: Size(130, 45),
-                              ),
-                            ),
+                            ]),
                           ]),
-                        ]),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
             ),
           );
         });
