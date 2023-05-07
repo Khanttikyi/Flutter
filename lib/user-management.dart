@@ -2,7 +2,7 @@ import 'dart:math';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_crud_with_hive_local_database/login.dart';
+import 'package:User_Management/login.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import './initiazlied-page.dart';
 import 'dart:developer';
@@ -42,6 +42,7 @@ Future<List<ByteData>> _loadAssets() async {
     rootBundle.load('assets/images/profile.png'),
     rootBundle.load('assets/images/avatar.png'),
     rootBundle.load('assets/images/login_bg_hd.png'),
+    rootBundle.load('assets/images/user_profle.png'),
   ];
 
   // Wait for both asset Futures to complete
@@ -174,7 +175,7 @@ class _UserManagementPageState extends State<UserManagementPage> {
         builder: (context, snapshot) {
           if (snapshot.hasData) {
             ByteData firstImageData = snapshot.data![0];
-            ByteData secondImageData = snapshot.data![1];
+            ByteData secondImageData = snapshot.data![3];
             ByteData thirdImageData = snapshot.data![2];
             return GestureDetector(
               onTap: () {
@@ -187,8 +188,8 @@ class _UserManagementPageState extends State<UserManagementPage> {
                           fontSize: 18, fontWeight: FontWeight.bold)),
                   centerTitle: true,
                 ),
-                endDrawer: Drawer(
-                  width: 220,
+                drawer: Drawer(
+                  width: _screenWidth>=1200?370:220,
                   child: ListView(
                     padding: EdgeInsets.zero,
                     children: [

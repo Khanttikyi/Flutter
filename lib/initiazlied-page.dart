@@ -2,8 +2,8 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_crud_with_hive_local_database/login.dart';
-import 'package:flutter_crud_with_hive_local_database/main.dart';
+import 'package:User_Management/login.dart';
+import 'package:User_Management/main.dart';
 
 class Initialized extends StatelessWidget {
   const Initialized({Key? key}) : super(key: key);

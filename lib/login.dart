@@ -2,8 +2,8 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_crud_with_hive_local_database/main.dart';
-import 'package:flutter_crud_with_hive_local_database/user-management.dart';
+import 'package:User_Management/main.dart';
+import 'package:User_Management/user-management.dart';
 import 'dart:math';
 import 'package:hive_flutter/hive_flutter.dart';
 import './initiazlied-page.dart';

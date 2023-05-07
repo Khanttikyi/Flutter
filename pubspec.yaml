@@ -1,6 +1,5 @@
-name: flutter_crud_with_hive_local_database
-description: A new Flutter project.
-
+name: User_Management
+description: User Management.
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -29,13 +28,20 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-
-
-  # The following adds the Cupertino Icons font to your application.
-  # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.2
   hive_flutter: ^1.1.0
   hive: ^2.2.3
+  flutter_native_splash: ^1.2.0
+ 
+flutter_native_splash:
+  color: "#FFFFFF"
+  image: assets/images/splash.png
+  fill: false
+  android: true
+  ios: true
+  # The following adds the Cupertino Icons font to your application.
+  # Use with the CupertinoIcons class for iOS style icons.
+  
 
 dev_dependencies:
   flutter_test:
@@ -67,6 +73,8 @@ flutter:
     - assets/images/Avatar-Profile.png
     - assets/images/bg-img.jpeg
     - assets/images/avatar.png
+    - assets/images/user_profle.png
+    - assets/images/splash.png
     # - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see

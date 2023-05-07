@@ -1,7 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.flutter_crud_with_hive_local_database">
+    package="com.example.User_Management">
    <application
-        android:label="flutter_crud_with_hive_local_database"
+        android:label="User_Management"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
